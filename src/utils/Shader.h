@@ -14,7 +14,6 @@ public:
     GLuint ID;
     // 构造器读取并构建着色器
     Shader() { this->ID = glCreateProgram(); }
-    ~Shader() { glDeleteProgram(this->ID); }
     // 构造器读取并构建着色器
     Shader& Use();
     // 编译着色器
