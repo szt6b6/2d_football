@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.15)
+project(Football)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ UTILS)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src/ SRC_LIST)
+
+add_executable(${PROJECT_NAME} ${SRC_LIST} ${UTILS})
+target_link_libraries(${PROJECT_NAME} glfw GLEW GL SOIL) # link sys libs
+
+SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}) # 设置输出可执行文件目录
