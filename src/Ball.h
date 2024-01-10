@@ -14,10 +14,12 @@ class Ball : public Entity {
 
         void set_velocity(GLfloat x, GLfloat y){ this->m_velocity.x = x; this->m_velocity.y = y;} // 设置球的速度
         void set_velocity(glm::vec2 v) { this->m_velocity = v;} // 设置球的速度
-        
+
         void set_rotation_v(GLfloat v) { this->m_rotation_v = v; } // 设置球的旋转角度
 
-        void update(GLfloat dt, GLuint window_width, GLuint window_height); // 更新球的位置
+        void update(GLfloat dt, GLuint window_width, GLuint window_height, GLfloat slow_down_strength); // 更新球的位置
+
+        void render();
 };
 
 #endif

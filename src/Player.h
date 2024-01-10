@@ -13,7 +13,7 @@ class Player : public Entity {
         glm::vec2 m_velocity; // 球的速度
         PLAYER_STATE m_state; // 玩家状态
 
-        Player(Shader shader, Texture2D texture, glm::vec2 position = glm::vec2(400.0f, 300.0f), glm::vec2 size = glm::vec2(10.0f, 10.0f), glm::vec2 velocity = glm::vec2(0.0f, 0.0f), glm::vec3 color = glm::vec3(0.2f, 0.3f, 0.3f)) : 
+        Player(Shader shader, Texture2D texture, glm::vec2 position = glm::vec2(100.0f, 75.0f), glm::vec2 size = glm::vec2(0.2f, 0.2f), glm::vec2 velocity = glm::vec2(0.0f, 0.0f), glm::vec3 color = glm::vec3(0.2f, 0.3f, 0.3f)) : 
             Entity(shader, texture, position, size, color), m_velocity(velocity), m_state(AI_PLAYER) { this->init(); }
 
         void set_velocity(GLfloat x, GLfloat y){ this->m_velocity.x = x; this->m_velocity.y = y;} // 设置球的速度

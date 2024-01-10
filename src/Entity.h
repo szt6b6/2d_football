@@ -14,7 +14,7 @@ class Entity {
         Texture2D m_texture; // texture
         GLuint m_VAO; // VAO
 
-        Entity(Shader shader, Texture2D texture2d, glm::vec2 position = glm::vec2(200.0f, 100.0f), glm::vec2 size = glm::vec2(200.0f, 100.0f), glm::vec3 color = glm::vec3(0.2f, 0.3f, 0.3f))
+        Entity(Shader shader, Texture2D texture2d, glm::vec2 position = glm::vec2(100.0f, 75.0f), glm::vec2 size = glm::vec2(1.0f, 1.0f), glm::vec3 color = glm::vec3(0.2f, 0.3f, 0.3f))
             : m_shader(shader), m_texture(texture2d), m_position(position), m_size(size), m_color(color) { }
         
         void init(); // buffer init

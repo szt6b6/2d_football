@@ -20,9 +20,4 @@ void Player::update(GLfloat dt, GLuint window_width, GLuint window_height)
         this->m_position.y = window_height - this->m_size.y;
         this->m_velocity.y = -this->m_velocity.y;
     }
-
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(this->m_position, 0.0f));
-    model = glm::scale(model, glm::vec3(this->m_size, 1.0f));
-    this->m_shader.Use().SetMatrix4("model", model);
 }

@@ -13,11 +13,13 @@
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
 // settings
 extern const unsigned int SCR_WIDTH = 800;
 extern const unsigned int SCR_HEIGHT = 600;
+
+Game* game = new Game(200, 150);
 
 int main()
 {
@@ -49,10 +51,10 @@ int main()
         std::cerr << "GLEW initialization failed" << std::endl;
         return -1;
     }
-
-    Game* game = new Game(SCR_WIDTH, SCR_HEIGHT);
     game->Init();
 
+    // 设置键盘回调函数
+    glfwSetKeyCallback(window, key_callback);
     
     // render loop
     // -----------
@@ -62,7 +64,7 @@ int main()
         GLfloat currentFrame = glfwGetTime();
         // input
         // -----
-        processInput(window);
+        game->ProcessInput(currentFrame - lastFrame);
         
         // logic
         game->Update(currentFrame - lastFrame);
@@ -82,12 +84,24 @@ int main()
     return 0;
 }
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
-{
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{   
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if(key >= 0 && key < 1024)
+    {
+        if(action == GLFW_PRESS) // if pressed all the time, run all the time
+        {
+            game->Keys[key] = GL_TRUE;
+        }
+        else if(action == GLFW_RELEASE)
+        {
+            game->Keys[key] = GL_FALSE;
+            game->Keys_hold[key] = GL_FALSE; // hold state reset
+        }
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
