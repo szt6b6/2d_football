@@ -21,7 +21,7 @@ class Player : public Entity {
 
         void set_state(PLAYER_STATE state) { this->m_state = state; } // 设置玩家状态
 
-        void update(GLfloat dt, GLuint window_width, GLuint window_height); // 更新球的位置
+        void update(GLfloat dt, GLuint window_width, GLuint window_height, glm::vec2 gate_position, glm::vec2 ball_position); // 更新球的位置
 };
 
 #endif

@@ -141,12 +141,15 @@ void Game::Update(GLfloat dt)
     this->CheckBallInGate(); // check ball in gate and update score
 
     this->m_ball->update(dt, this->m_width, this->m_height, this->m_playground->m_friction_param * 100);
+
     for(auto player : this->m_players_blue) {
-        if(player->m_state == HUMAN_PLAYER) continue;
-        player->update(dt, this->m_width, this->m_height);
+        if(player->m_state == HUMAN_PLAYER) continue; // human player update in ProcessInput
+        player->update(dt, this->m_width, this->m_height, 
+            this->m_gate_red->m_position + this->m_gate_red->m_size * 0.5f, this->m_ball->m_position + this->m_ball->m_size * 0.5f);
     }
     for(auto player : this->m_players_red) {
-        player->update(dt, this->m_width, this->m_height);
+        player->update(dt, this->m_width, this->m_height, 
+            this->m_gate_blue->m_position + this->m_gate_blue->m_size * 0.5f, this->m_ball->m_position + + this->m_ball->m_size * 0.5f);
     }
 }
 
@@ -228,14 +231,14 @@ void Game::Reset()
 void Game::CheckBallInGate()
 {
     // blue gate
-    if(CheckBallInRec(this->m_ball, this->m_gate_blue)) {
+    if(this->m_state == GAME_ACTIVE && CheckBallInRec(this->m_ball, this->m_gate_blue)) {
         this->m_score_red++;
         // 进球播放音效... 重置球的位置
         this->m_ball->m_position = glm::vec2(this->m_width * 0.5, this->m_height * 0.5);
         this->m_ball->m_velocity = glm::vec2(0.0f, 0.0f);
     }
     // red gate
-    if(CheckBallInRec(this->m_ball, this->m_gate_red)) {
+    if(this->m_state == GAME_ACTIVE && CheckBallInRec(this->m_ball, this->m_gate_red)) {
         this->m_score_blue++;
         this->m_ball->m_position = glm::vec2(this->m_width * 0.5, this->m_height * 0.5);
         this->m_ball->m_velocity = glm::vec2(0.0f, 0.0f);
