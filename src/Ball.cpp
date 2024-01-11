@@ -2,7 +2,8 @@
 
 void Ball::update(GLfloat dt, GLuint window_width, GLuint window_height, GLfloat slow_down_strength)
 {
-    // 球的位置更新
+    // 球的位置更新 v越快旋转越快
+    this->m_rotation_v = this->m_velocity.x * 2.0f;
     this->m_rotation += this->m_rotation_v * dt;
     this->m_position += this->m_velocity * dt;
     if(this->m_position.x <= 0.0f) {

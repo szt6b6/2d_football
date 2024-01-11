@@ -4,15 +4,24 @@
 #include "utils/ResourceManager.h"
 #include "utils/Log.h"
 #include "utils/Shader.h"
+#include "utils/Text.h"
 #include "Playground.h"
 #include "Ball.h"
 #include "Player.h"
 
 #include <vector>
 
+enum GameState {
+    GAME_ACTIVE,
+    GAME_MENU,
+    GAME_WIN
+};
+
 
 class Game {
     public:
+        GameState m_state;
+
         GLuint m_width, m_height;
         Playground* m_playground;
         Ball* m_ball;
@@ -23,11 +32,12 @@ class Game {
         Entity *m_gate_blue, *m_gate_red;
 
         Player* m_player_human; // human control player pointer
+        TextRender* m_text_render; // text render pointer
 
         GLboolean  Keys[1024]; // key pressed state
         GLboolean  Keys_hold[1024]; // key hold state
         
-        Game(GLuint width, GLuint height) : m_width(width), m_height(height), m_score_blue(0), m_score_red(0) {}
+        Game(GLuint width, GLuint height) : m_width(width), m_height(height), m_score_blue(0), m_score_red(0), m_state(GAME_MENU) {}
         ~Game(){ delete m_playground; }
 
         void Init();
@@ -45,6 +55,8 @@ class Game {
         // process key event
         void ProcessInput(GLfloat dt);
 
+        // reset game
+        void Reset();
 
 };
 

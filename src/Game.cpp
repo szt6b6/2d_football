@@ -5,6 +5,8 @@ const glm::vec2 PLAYER_SIZE = glm::vec2(5.0f, 5.0f);
 const GLfloat BALL_SPEED = 30.0f;
 const GLfloat BALL_RADIUS = 2.0f;
 
+const GLuint FONT_SIZE = 15;
+
 // player and ball boteh are circle, so we use circle collision detection
 std::pair<GLboolean, glm::vec2> CheckCollision(Entity *a, Entity *b)
 {
@@ -71,11 +73,11 @@ void Game::Init()
     ResourceManager::GetShader("ball").Use().SetMatrix4("projection", projection);
     this->m_ball = new Ball(ResourceManager::GetShader("ball"),
                             ResourceManager::GetTexture("ball"),
-                            glm::vec2(this->m_width * 0.5, this->m_height * 0.5), // position
+                            glm::vec2(this->m_width * 0.5 - BALL_RADIUS, this->m_height * 0.5 - BALL_RADIUS), // position
                             glm::vec2(BALL_RADIUS * 2, BALL_RADIUS * 2), // size
-                            glm::vec2(BALL_SPEED, BALL_SPEED), // velocity
+                            glm::vec2(0, 0), // velocity
                             glm::vec3(0.0f, 1.0f, 0.0f)); // color
-    this->m_ball->set_rotation_v(45.0f);
+    this->m_ball->set_rotation_v(0.0f);
 
     // load player
     for(int i=0; i<5; i++) {
@@ -86,7 +88,7 @@ void Game::Init()
                                     ResourceManager::GetTexture("ball"),
                                     glm::vec2(rand() % this->m_width, rand() %this->m_height), 
                                     PLAYER_SIZE, 
-                                    glm::vec2(rand() % PLAYER_SPEED, rand() % PLAYER_SPEED), 
+                                    glm::vec2(0, 0), 
                                     glm::vec3(0.0f, 0.0f, 1.0f));
         // player->set_state(AI_PLAYER); // default ai player
         this->m_players_blue.push_back(player);
@@ -99,7 +101,7 @@ void Game::Init()
                                     ResourceManager::GetTexture("ball"),
                                     glm::vec2(rand() % this->m_width, rand() %this->m_height), 
                                     PLAYER_SIZE, 
-                                    glm::vec2(rand() % PLAYER_SPEED, rand() % PLAYER_SPEED), 
+                                    glm::vec2(0, 0), // velocity control by AI
                                     glm::vec3(1.0f, 0.0f, 0.0f));
         this->m_players_red.push_back(player);
     }
@@ -126,13 +128,17 @@ void Game::Init()
                                     glm::vec2(this->m_width * 0.05, this->m_height * 0.25),
                                     glm::vec3(1.0f, 0.0f, 0.0f));
     this->m_gate_red->init();
+
+    // load text render
+    this->m_text_render = new TextRender(this->m_width, this->m_height);
+    this->m_text_render->Load("resources/fonts/VonwaonBitmap-16px.ttf", FONT_SIZE);
 }
 
 void Game::Update(GLfloat dt)
 {
     this->DoCollision();
 
-    this->CheckBallInGate();
+    this->CheckBallInGate(); // check ball in gate and update score
 
     this->m_ball->update(dt, this->m_width, this->m_height, this->m_playground->m_friction_param * 100);
     for(auto player : this->m_players_blue) {
@@ -158,6 +164,19 @@ void Game::Render()
     this->m_gate_red->render();
     this->m_ball->render();
 
+    // render score
+    std::string score = std::to_string(this->m_score_blue) + ":" + std::to_string(this->m_score_red);;
+    this->m_text_render->RenderText(score, this->m_width / 2 - FONT_SIZE, this->m_height - FONT_SIZE, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+    
+    if(this->m_state == GAME_WIN) {
+        std::string win = this->m_score_blue > this->m_score_red ? "Blue Win!" : "Red Win!";
+        this->m_text_render->RenderText(win, this->m_width / 2 - FONT_SIZE / 2 * win.size() / 2 , this->m_height / 2 + FONT_SIZE, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+    }
+    if(this->m_state == GAME_MENU || this->m_state == GAME_WIN) {
+        std::string menu = "Press Enter to Start";
+        this->m_text_render->RenderText(menu, this->m_width / 2 - FONT_SIZE * menu.size() / 4 , this->m_height / 2, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+    }
+    
     for(auto player : this->m_players_blue) {
         player->render();
     }
@@ -182,6 +201,28 @@ void Game::ProcessInput(GLfloat dt)
     if(this->Keys[GLFW_KEY_D]) {
         this->m_player_human->m_position.x = std::min(this->m_player_human->m_position.x + delta_s, (GLfloat)this->m_width - PLAYER_SIZE.x);
     }
+    if((this->m_state == GAME_MENU || this->m_state == GAME_WIN) && this->Keys[GLFW_KEY_ENTER] && !this->Keys_hold[GLFW_KEY_ENTER]) {
+        this->m_state = GAME_ACTIVE;
+        this->Keys_hold[GLFW_KEY_ENTER] = GL_TRUE;
+        this->Reset();
+    }
+}
+
+// after win and restart game
+void Game::Reset()
+{
+    this->m_score_blue = 0;
+    this->m_score_red = 0;
+    this->m_ball->m_position = glm::vec2(this->m_width * 0.5 - this->m_ball->m_radius, this->m_height * 0.5 - this->m_ball->m_radius);
+    this->m_ball->m_velocity = glm::vec2(0.0f, 0.0f);
+    for(auto player : this->m_players_blue) {
+        player->m_position = glm::vec2(rand() % this->m_width, rand() %this->m_height);
+        player->m_velocity = glm::vec2(0.0f, 0.0f);
+    }
+    for(auto player : this->m_players_red) {
+        player->m_position = glm::vec2(rand() % this->m_width, rand() %this->m_height);
+        player->m_velocity = glm::vec2(0.0f, 0.0f);
+    }
 }
 
 void Game::CheckBallInGate()
@@ -189,6 +230,7 @@ void Game::CheckBallInGate()
     // blue gate
     if(CheckBallInRec(this->m_ball, this->m_gate_blue)) {
         this->m_score_red++;
+        // 进球播放音效... 重置球的位置
         this->m_ball->m_position = glm::vec2(this->m_width * 0.5, this->m_height * 0.5);
         this->m_ball->m_velocity = glm::vec2(0.0f, 0.0f);
     }
@@ -197,6 +239,10 @@ void Game::CheckBallInGate()
         this->m_score_blue++;
         this->m_ball->m_position = glm::vec2(this->m_width * 0.5, this->m_height * 0.5);
         this->m_ball->m_velocity = glm::vec2(0.0f, 0.0f);
+    }
+
+    if(this->m_score_blue >= 1 || this->m_score_red >= 1) {
+        this->m_state = GAME_WIN;
     }
 }
 
