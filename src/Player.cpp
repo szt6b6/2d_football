@@ -2,7 +2,7 @@
 
 void Player::update(GLfloat dt, GLuint window_width, GLuint window_height, glm::vec2 gate_position, glm::vec2 ball_position)
 {
-    // AI control
+    // AI control, make dicision and set velocity
     // logic: move to back of the ball and kick the ball
     glm::vec2 player_center = this->m_position + this->m_size / 2.0f;
     if(this->m_operation_state == IDLE) {
@@ -32,6 +32,8 @@ void Player::update(GLfloat dt, GLuint window_width, GLuint window_height, glm::
         }
     }
 
+
+    // do decision
     this->m_position += this->m_velocity * dt;
     // boundary check
     if(this->m_position.x <= 0.0f) {
