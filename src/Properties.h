@@ -23,10 +23,9 @@ extern const glm::vec2 BLUE_TEAM_POSITION_OFFSET[]; // 蓝队队员位置偏移
 
 extern const GLfloat PLAYER_SPEED; // 玩家移动速度
 extern const glm::vec2 PLAYER_SIZE; // 玩家大小
-extern const GLuint IDEL_WAIT_TIME; // 玩家踢球后空闲等待帧数
-extern const GLuint KICK_WAIT_TIME; // 玩家踢球状态持续帧数
-extern const GLfloat BALL_SPEED; // 球的速度
+extern const GLfloat PLAYER_WEIGHT; // 玩家质量
 extern const GLfloat BALL_RADIUS; // 球的半径
 extern const GLfloat FONT_SIZE; // 字体大小
+extern const GLfloat BALL_WEIGHT; // 球的质量
 
 #endif
