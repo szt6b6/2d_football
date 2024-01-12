@@ -2,6 +2,7 @@
 #define PLAYGROUND_H
 
 #include "Entity.h"
+#include "Properties.h"
 
 // playground class
 

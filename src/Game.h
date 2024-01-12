@@ -5,6 +5,7 @@
 #include "utils/Log.h"
 #include "utils/Shader.h"
 #include "utils/Text.h"
+#include "Properties.h"
 #include "Playground.h"
 #include "Ball.h"
 #include "Player.h"
@@ -22,7 +23,7 @@ class Game {
     public:
         GameState m_state;
 
-        GLuint m_width, m_height;
+        GLfloat m_width, m_height;
         Playground* m_playground;
         Ball* m_ball;
         std::vector<Player*> m_players_blue;
@@ -37,7 +38,7 @@ class Game {
         GLboolean  Keys[1024]; // key pressed state
         GLboolean  Keys_hold[1024]; // key hold state
         
-        Game(GLuint width, GLuint height) : m_width(width), m_height(height), m_score_blue(0), m_score_red(0), m_state(GAME_MENU) {}
+        Game(GLfloat width, GLfloat height) : m_width(width), m_height(height), m_score_blue(0), m_score_red(0), m_state(GAME_MENU) {}
         ~Game(){ delete m_playground; }
 
         void Init();

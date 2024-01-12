@@ -2,6 +2,7 @@
 #define BALL_H
 
 #include "Entity.h"
+#include "Properties.h"
 
 class Ball : public Entity {
     public:

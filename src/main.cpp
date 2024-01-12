@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <map>
 
+#include "Properties.h"
 #include "Playground.h"
 #include "utils/ResourceManager.h"
 #include "Game.h"
@@ -15,11 +16,8 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
-// settings
-extern const unsigned int SCR_WIDTH = 800;
-extern const unsigned int SCR_HEIGHT = 600;
 
-Game* game = new Game(200, 150);
+Game* game = new Game(PLAYGROUND_WIDTH, PLAYGROUND_HEIGHT);
 
 int main()
 {
@@ -36,7 +34,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "2d_football", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "2d_football", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;

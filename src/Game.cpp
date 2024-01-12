@@ -1,12 +1,5 @@
 #include "Game.h"
 
-const GLuint PLAYER_SPEED = 20;
-const glm::vec2 PLAYER_SIZE = glm::vec2(5.0f, 5.0f);
-const GLfloat BALL_SPEED = 30.0f;
-const GLfloat BALL_RADIUS = 2.0f;
-
-const GLuint FONT_SIZE = 15;
-
 // player and ball boteh are circle, so we use circle collision detection
 std::pair<GLboolean, glm::vec2> CheckCollision(Entity *a, Entity *b)
 {
@@ -58,7 +51,7 @@ void Game::Init()
                                     0.0f, static_cast<GLfloat>(this->m_height), -1.0f, 1.0f);
                                 
     // load playground
-    ResourceManager::LoadTexture("resources/textures/background.jpg", GL_FALSE, "background");
+    ResourceManager::LoadTexture("resources/textures/fooball_playground.jpeg", GL_TRUE, "background");
     ResourceManager::LoadShader("src/shaders/playground.vs", "src/shaders/playground.fs", nullptr, "playground");
     ResourceManager::GetShader("playground").Use().SetMatrix4("projection", projection);
     this->m_playground = new Playground(ResourceManager::GetShader("playground"), 
@@ -80,26 +73,26 @@ void Game::Init()
     this->m_ball->set_rotation_v(0.0f);
 
     // load player
-    for(int i=0; i<5; i++) {
+    for(int i=0; i<PLAYER_MAX_NUM; i++) {
         std::string shader_name = "blue_player_" + std::to_string(i);
         ResourceManager::LoadShader("src/shaders/player.vs", "src/shaders/player.fs", nullptr, shader_name);
         ResourceManager::GetShader(shader_name).Use().SetMatrix4("projection", projection);
         Player* player = new Player(ResourceManager::GetShader(shader_name),
                                     ResourceManager::GetTexture("ball"),
-                                    glm::vec2(rand() % this->m_width, rand() %this->m_height), 
+                                    BLUE_TIME_INIT_POSITION + BLUE_TEAM_POSITION_OFFSET[i], // according to different player, add diff offset
                                     PLAYER_SIZE, 
                                     glm::vec2(0, 0), 
                                     glm::vec3(0.0f, 0.0f, 1.0f));
-        // player->set_state(AI_PLAYER); // default ai player
+        // player->set_role(AI_PLAYER); // default ai player
         this->m_players_blue.push_back(player);
     }
-    for(int i=0; i<5; i++) {
+    for(int i=0; i<PLAYER_MAX_NUM; i++) {
         std::string shader_name = "red_player_" + std::to_string(i);
         ResourceManager::LoadShader("src/shaders/player.vs", "src/shaders/player.fs", nullptr, shader_name);
         ResourceManager::GetShader(shader_name).Use().SetMatrix4("projection", projection);
         Player* player = new Player(ResourceManager::GetShader(shader_name),
                                     ResourceManager::GetTexture("ball"),
-                                    glm::vec2(rand() % this->m_width, rand() %this->m_height), 
+                                    RED_TIME_INIT_POSITION + RED_TEAM_POSITION_OFFSET[i],
                                     PLAYER_SIZE, 
                                     glm::vec2(0, 0), // velocity control by AI
                                     glm::vec3(1.0f, 0.0f, 0.0f));
@@ -107,7 +100,7 @@ void Game::Init()
     }
     // set human player
     this->m_player_human = this->m_players_blue[0];
-    this->m_player_human->set_state(HUMAN_PLAYER);
+    this->m_player_human->set_role(HUMAN_PLAYER);
     this->m_player_human->set_velocity(0.0f, 0.0f);
 
     // load gate
@@ -118,14 +111,14 @@ void Game::Init()
     ResourceManager::GetShader("gate_red").Use().SetMatrix4("projection", projection);
     this->m_gate_blue = new Entity(ResourceManager::GetShader("gate_blue"),
                                     ResourceManager::GetTexture("gate"),
-                                    glm::vec2(0.0f, this->m_height * 0.5 - this->m_height * 0.125), 
-                                    glm::vec2(this->m_width * 0.05, this->m_height * 0.25), 
+                                    glm::vec2(0.0f, this->m_height * 0.5 - this->m_height * GATE_SIZE_SCALE.y * 0.5), 
+                                    glm::vec2(this->m_width * GATE_SIZE_SCALE.x, this->m_height * GATE_SIZE_SCALE.y), 
                                     glm::vec3(0.0f, 0.0f, 1.0f));
     this->m_gate_blue->init();
     this->m_gate_red = new Entity(ResourceManager::GetShader("gate_red"),
                                     ResourceManager::GetTexture("gate"),
-                                    glm::vec2(this->m_width - this->m_width * 0.05, this->m_height * 0.5 - this->m_height * 0.125),
-                                    glm::vec2(this->m_width * 0.05, this->m_height * 0.25),
+                                    glm::vec2(this->m_width - this->m_width * GATE_SIZE_SCALE.x, this->m_height * 0.5 - this->m_height * GATE_SIZE_SCALE.y * 0.5),
+                                    glm::vec2(this->m_width * GATE_SIZE_SCALE.x, this->m_height * GATE_SIZE_SCALE.y),
                                     glm::vec3(1.0f, 0.0f, 0.0f));
     this->m_gate_red->init();
 
@@ -149,7 +142,7 @@ void Game::Update(GLfloat dt)
     }
     for(auto player : this->m_players_red) {
         player->update(dt, this->m_width, this->m_height, 
-            this->m_gate_blue->m_position + this->m_gate_blue->m_size * 0.5f, this->m_ball->m_position + + this->m_ball->m_size * 0.5f);
+            this->m_gate_blue->m_position + this->m_gate_blue->m_size * 0.5f, this->m_ball->m_position + this->m_ball->m_size * 0.5f);
     }
 }
 
@@ -191,7 +184,12 @@ void Game::Render()
 // human player update according to key event
 void Game::ProcessInput(GLfloat dt)
 {
+    if(!this->m_player_human) return;
+
     GLfloat delta_s = PLAYER_SPEED * dt;
+    if(this->Keys[GLFW_KEY_SPACE]) { // user press space to speed up
+        delta_s *= 2;
+    }
     if(this->Keys[GLFW_KEY_A]) {
         this->m_player_human->m_position.x = std::max(this->m_player_human->m_position.x - delta_s, 0.0f);
     }
@@ -218,13 +216,17 @@ void Game::Reset()
     this->m_score_red = 0;
     this->m_ball->m_position = glm::vec2(this->m_width * 0.5 - this->m_ball->m_radius, this->m_height * 0.5 - this->m_ball->m_radius);
     this->m_ball->m_velocity = glm::vec2(0.0f, 0.0f);
-    for(auto player : this->m_players_blue) {
-        player->m_position = glm::vec2(rand() % this->m_width, rand() %this->m_height);
-        player->m_velocity = glm::vec2(0.0f, 0.0f);
-    }
-    for(auto player : this->m_players_red) {
-        player->m_position = glm::vec2(rand() % this->m_width, rand() %this->m_height);
-        player->m_velocity = glm::vec2(0.0f, 0.0f);
+
+    for(int i=0; i<PLAYER_MAX_NUM; i++) {
+        this->m_players_blue[i]->m_position = BLUE_TIME_INIT_POSITION + BLUE_TEAM_POSITION_OFFSET[i];
+        this->m_players_blue[i]->m_velocity = glm::vec2(0.0f, 0.0f);
+        this->m_players_blue[i]->m_operation_state = IDLE;
+        this->m_players_blue[i]->kick_time_step = KICK_WAIT_TIME;
+
+        this->m_players_red[i]->m_position = RED_TIME_INIT_POSITION + RED_TEAM_POSITION_OFFSET[i];
+        this->m_players_red[i]->m_velocity = glm::vec2(0.0f, 0.0f);
+        this->m_players_red[i]->m_operation_state = IDLE;
+        this->m_players_red[i]->kick_time_step = KICK_WAIT_TIME;
     }
 }
 
@@ -233,7 +235,7 @@ void Game::CheckBallInGate()
     // blue gate
     if(this->m_state == GAME_ACTIVE && CheckBallInRec(this->m_ball, this->m_gate_blue)) {
         this->m_score_red++;
-        // 进球播放音效... 重置球的位置
+        // 进球播放音效...ing 重置球的位置
         this->m_ball->m_position = glm::vec2(this->m_width * 0.5, this->m_height * 0.5);
         this->m_ball->m_velocity = glm::vec2(0.0f, 0.0f);
     }
@@ -315,6 +317,11 @@ void Game::DoCollision()
             // position correction
             this->m_ball->m_position += c.second * 2.0f;
             player->m_position -= c.second;
+
+            if(player->m_state == AI_PLAYER &&player->m_operation_state == KICK) {
+                player->m_operation_state = IDLE;
+                player->kick_time_step = KICK_WAIT_TIME;
+            }
         }
     }
     for(auto player : this->m_players_red) {
@@ -325,8 +332,13 @@ void Game::DoCollision()
             this->m_ball->m_velocity = glm::normalize(ball_center - player_center) * BALL_SPEED;
 
             // position correction
-            this->m_ball->m_position += c.second * 2.0f;
+            this->m_ball->m_position += c.second;
             player->m_position -= c.second;
+
+            if(player->m_state == AI_PLAYER && player->m_operation_state == KICK) {
+                player->m_operation_state = IDLE;
+                player->kick_time_step = KICK_WAIT_TIME;
+            }
         }
     }
 
