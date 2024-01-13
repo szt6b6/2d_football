@@ -35,8 +35,9 @@ class Game {
         Player* m_player_human; // human control player pointer
         TextRender* m_text_render; // text render pointer
 
-        GLboolean  Keys[1024]; // key pressed state
-        GLboolean  Keys_hold[1024]; // key hold state
+        GLboolean Keys[1024]; // key pressed state
+        GLboolean Keys_hold[1024]; // key hold state
+        glm::vec2 m_mouse_position; // mouse position
         
         Game(GLfloat width, GLfloat height) : m_width(width), m_height(height), m_score_blue(0), m_score_red(0), m_state(GAME_MENU) {}
         ~Game(){ delete m_playground; }
@@ -55,6 +56,9 @@ class Game {
 
         // process key event
         void ProcessInput(GLfloat dt);
+
+        // mouse move event
+        void SetMousePosition(GLfloat xpos, GLfloat ypos) { this->m_mouse_position.x = xpos; this->m_mouse_position.y = ypos;}
 
         // reset game
         void Reset();

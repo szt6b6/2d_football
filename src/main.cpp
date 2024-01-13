@@ -15,6 +15,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void mouse_move_callback(GLFWwindow* window, double xpos, double ypos);
 
 
 Game* game = new Game(PLAYGROUND_WIDTH, PLAYGROUND_HEIGHT);
@@ -53,6 +54,7 @@ int main()
 
     // 设置键盘回调函数
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, mouse_move_callback);
     
     // render loop
     // -----------
@@ -101,6 +103,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         }
     }
 }
+
+void mouse_move_callback(GLFWwindow* window, double xpos, double ypos) {
+    // get mouse position according to window size
+    xpos = xpos / WINDOW_WIDTH * game->m_width;
+    ypos = WINDOW_HEIGHT - ypos; // left bottom is (0, 0), need to convert
+    ypos = ypos / WINDOW_HEIGHT * game->m_height;
+    
+    game->SetMousePosition(xpos, ypos);
+}
+
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------

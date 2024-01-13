@@ -41,8 +41,8 @@ void correctVelocitiesAfterCollision(glm::vec2& velocity1, glm::vec2& velocity2,
     GLfloat normalVelocity = glm::dot(relativeVelocity, collisionNormal);
 
     // Recalculate velocities based on mass and momentum conservation
-    velocity1 -= (2 * mass1) / (mass1 + mass2) * normalVelocity * collisionNormal;
-    velocity2 += (2 * mass2) / (mass1 + mass2) * normalVelocity * collisionNormal;
+    velocity1 -= (2 * mass2) / (mass1 + mass2) * normalVelocity * collisionNormal;
+    velocity2 += (2 * mass1) / (mass1 + mass2) * normalVelocity * collisionNormal;
 }
 
 void Game::Init()
@@ -83,7 +83,7 @@ void Game::Init()
                                     PLAYER_SIZE, 
                                     glm::vec2(0, 0), 
                                     glm::vec3(0.0f, 0.0f, 1.0f));
-        // player->set_role(AI_PLAYER); // default ai player
+        player->set_operation_state(BLUE_TEAM_OPERATION_STATE[i]);
         this->m_players_blue.push_back(player);
     }
     for(int i=0; i<PLAYER_MAX_NUM; i++) {
@@ -96,12 +96,14 @@ void Game::Init()
                                     PLAYER_SIZE, 
                                     glm::vec2(0, 0), // velocity control by AI
                                     glm::vec3(1.0f, 0.0f, 0.0f));
+        player->set_operation_state(RED_TEAM_OPERATION_STATE[i]);
         this->m_players_red.push_back(player);
     }
     // set human player
     this->m_player_human = this->m_players_blue[0];
     this->m_player_human->set_role(HUMAN_PLAYER);
     this->m_player_human->set_velocity(0.0f, 0.0f);
+    this->m_player_human->set_color(glm::vec3(1.0f, 1.0f, 0.0f));
 
     // load gate
     ResourceManager::LoadShader("src/shaders/gate.vs", "src/shaders/gate.fs", nullptr, "gate_blue");
@@ -134,15 +136,19 @@ void Game::Update(GLfloat dt)
     this->CheckBallInGate(); // check ball in gate and update score
 
     this->m_ball->update(dt, this->m_width, this->m_height, this->m_playground->m_friction_param * 100);
+    glm::vec2 ball_center = this->m_ball->m_position + this->m_ball->m_size / 2.0f;
+    glm::vec2 red_gate_center = this->m_gate_red->m_position + this->m_gate_red->m_size / 2.0f;
+    glm::vec2 blue_gate_center = this->m_gate_blue->m_position + this->m_gate_blue->m_size / 2.0f;
 
     for(auto player : this->m_players_blue) {
-        if(player->m_state == HUMAN_PLAYER) continue; // human player update in ProcessInput
-        player->update(dt, this->m_width, this->m_height, 
-            this->m_gate_red->m_position + this->m_gate_red->m_size * 0.5f, this->m_ball->m_position + this->m_ball->m_size * 0.5f);
+        if(player->m_state == HUMAN_PLAYER) {
+            player->update_by_controller(dt, this->m_width, this->m_height, ball_center, this->m_mouse_position); // human player position update
+            continue;
+        }
+        player->update(dt, this->m_width, this->m_height, red_gate_center, blue_gate_center, ball_center);
     }
     for(auto player : this->m_players_red) {
-        player->update(dt, this->m_width, this->m_height, 
-            this->m_gate_blue->m_position + this->m_gate_blue->m_size * 0.5f, this->m_ball->m_position + this->m_ball->m_size * 0.5f);
+        player->update(dt, this->m_width, this->m_height, blue_gate_center, red_gate_center, ball_center);
     }
 }
 
@@ -184,24 +190,6 @@ void Game::Render()
 // human player update according to key event
 void Game::ProcessInput(GLfloat dt)
 {
-    if(!this->m_player_human) return;
-
-    GLfloat delta_s = PLAYER_SPEED * dt;
-    if(this->Keys[GLFW_KEY_SPACE]) { // user press space to speed up
-        delta_s *= 2;
-    }
-    if(this->Keys[GLFW_KEY_A]) {
-        this->m_player_human->m_position.x = std::max(this->m_player_human->m_position.x - delta_s, 0.0f);
-    }
-    if(this->Keys[GLFW_KEY_W]) {
-        this->m_player_human->m_position.y = std::min(this->m_player_human->m_position.y + delta_s, (GLfloat)this->m_height - PLAYER_SIZE.y);
-    }
-    if(this->Keys[GLFW_KEY_S]) {
-        this->m_player_human->m_position.y = std::max(this->m_player_human->m_position.y - delta_s, 0.0f);
-    }        
-    if(this->Keys[GLFW_KEY_D]) {
-        this->m_player_human->m_position.x = std::min(this->m_player_human->m_position.x + delta_s, (GLfloat)this->m_width - PLAYER_SIZE.x);
-    }
     if((this->m_state == GAME_MENU || this->m_state == GAME_WIN) && this->Keys[GLFW_KEY_ENTER] && !this->Keys_hold[GLFW_KEY_ENTER]) {
         this->m_state = GAME_ACTIVE;
         this->Keys_hold[GLFW_KEY_ENTER] = GL_TRUE;
@@ -220,12 +208,12 @@ void Game::Reset()
     for(int i=0; i<PLAYER_MAX_NUM; i++) {
         this->m_players_blue[i]->m_position = BLUE_TIME_INIT_POSITION + BLUE_TEAM_POSITION_OFFSET[i];
         this->m_players_blue[i]->m_velocity = glm::vec2(0.0f, 0.0f);
-        this->m_players_blue[i]->m_operation_state = IDLE;
+        this->m_players_blue[i]->m_operation_state = BLUE_TEAM_OPERATION_STATE[i];
         this->m_players_blue[i]->kick_time_step = KICK_WAIT_TIME;
 
         this->m_players_red[i]->m_position = RED_TIME_INIT_POSITION + RED_TEAM_POSITION_OFFSET[i];
         this->m_players_red[i]->m_velocity = glm::vec2(0.0f, 0.0f);
-        this->m_players_red[i]->m_operation_state = IDLE;
+        this->m_players_red[i]->m_operation_state = RED_TEAM_OPERATION_STATE[i];
         this->m_players_red[i]->kick_time_step = KICK_WAIT_TIME;
     }
 }
@@ -246,7 +234,7 @@ void Game::CheckBallInGate()
         this->m_ball->m_velocity = glm::vec2(0.0f, 0.0f);
     }
 
-    if(this->m_score_blue >= 1 || this->m_score_red >= 1) {
+    if(this->m_score_blue >= GAME_SCORE_TURN || this->m_score_red >= GAME_SCORE_TURN) {
         this->m_state = GAME_WIN;
     }
 }
@@ -263,7 +251,7 @@ void Game::DoCollision()
                 // velocity correction
                 glm::vec2 p1_center = player->m_position + player->m_size / 2.0f;
                 glm::vec2 p2_center = player2->m_position + player2->m_size / 2.0f;
-                correctVelocitiesAfterCollision(player->m_velocity, player2->m_velocity, p1_center, p2_center, 1.0f, 1.0f);
+                correctVelocitiesAfterCollision(player->m_velocity, player2->m_velocity, p1_center, p2_center, PLAYER_WEIGHT, PLAYER_WEIGHT);
 
                 // position correction
                 player->m_position += c.second;
@@ -280,7 +268,7 @@ void Game::DoCollision()
                 // velocity correction
                 glm::vec2 p1_center = player->m_position + player->m_size / 2.0f;
                 glm::vec2 p2_center = player2->m_position + player2->m_size / 2.0f;
-                correctVelocitiesAfterCollision(player->m_velocity, player2->m_velocity, p1_center, p2_center, 1.0f, 1.0f);
+                correctVelocitiesAfterCollision(player->m_velocity, player2->m_velocity, p1_center, p2_center, PLAYER_WEIGHT, PLAYER_WEIGHT);
 
                 // position correction
                 player->m_position += c.second;
@@ -297,7 +285,7 @@ void Game::DoCollision()
                 // velocity correction
                 glm::vec2 p1_center = player->m_position + player->m_size / 2.0f;
                 glm::vec2 p2_center = player2->m_position + player2->m_size / 2.0f;
-                correctVelocitiesAfterCollision(player->m_velocity, player2->m_velocity, p1_center, p2_center, 1.0f, 1.0f);
+                correctVelocitiesAfterCollision(player->m_velocity, player2->m_velocity, p1_center, p2_center, PLAYER_WEIGHT, PLAYER_WEIGHT);
 
                 // position correction
                 player->m_position += c.second;
@@ -312,10 +300,10 @@ void Game::DoCollision()
         if(c.first) {
             glm::vec2 ball_center = this->m_ball->m_position + this->m_ball->m_size / 2.0f;
             glm::vec2 player_center = player->m_position + player->m_size / 2.0f;
-            this->m_ball->m_velocity = glm::normalize(ball_center - player_center) * BALL_SPEED;
+            correctVelocitiesAfterCollision(this->m_ball->m_velocity, player->m_velocity, ball_center, player_center, BALL_WEIGHT, PLAYER_WEIGHT);
 
             // position correction
-            this->m_ball->m_position += c.second * 2.0f;
+            this->m_ball->m_position += c.second;
             player->m_position -= c.second;
 
             if(player->m_state == AI_PLAYER &&player->m_operation_state == KICK) {
@@ -329,7 +317,7 @@ void Game::DoCollision()
         if(c.first) {
             glm::vec2 ball_center = this->m_ball->m_position + this->m_ball->m_size / 2.0f;
             glm::vec2 player_center = player->m_position + player->m_size / 2.0f;
-            this->m_ball->m_velocity = glm::normalize(ball_center - player_center) * BALL_SPEED;
+            correctVelocitiesAfterCollision(this->m_ball->m_velocity, player->m_velocity, ball_center, player_center, BALL_WEIGHT, PLAYER_WEIGHT);
 
             // position correction
             this->m_ball->m_position += c.second;

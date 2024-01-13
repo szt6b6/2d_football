@@ -45,7 +45,8 @@ void Entity::render()
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(this->m_position, 0.0f));
     model = glm::scale(model, glm::vec3(this->m_size, 1.0f));
-    this->m_shader.Use().SetMatrix4("model", model);
+    this->m_shader.SetMatrix4("model", model);
+    this->m_shader.SetVector3f("m_color", this->m_color);
     
     glBindVertexArray(this->m_VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
