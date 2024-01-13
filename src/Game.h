@@ -72,7 +72,7 @@ class Game {
         // process key event
         void ProcessInput(GLfloat dt);
         // set mouse position
-        void SetMousePosition(GLfloat x, GLfloat y) { this->Mouse_position.x = x; this->Mouse_position.y = y; }
+        void SetMousePosition(GLfloat x, GLfloat y) { this->Mouse_position.x = x; this->Mouse_position.y = y; set_player_toward(); }
         // receive mouse click, ready for shot
         void MouseRelease();
 
@@ -82,6 +82,8 @@ class Game {
         // inc mouse hold time
         void set_mouseClickTime() { this->Mouse_click_time = glfwGetTime(); }
         void set_mouseReleaseTime() { this->Mouse_release_time = glfwGetTime(); }
+        
+        void set_player_toward();
     
         
 };

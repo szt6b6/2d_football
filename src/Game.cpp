@@ -51,26 +51,27 @@ void Game::Init()
                                     0.0f, static_cast<GLfloat>(this->m_height), -1.0f, 1.0f);
                                 
     // load playground
-    ResourceManager::LoadTexture("resources/textures/fooball_playground.jpeg", GL_TRUE, "background");
+    ResourceManager::LoadTexture("resources/textures/football_playground.jpeg", GL_TRUE, "background");
     ResourceManager::LoadShader("src/shaders/playground.vs", "src/shaders/playground.fs", nullptr, "playground");
     ResourceManager::GetShader("playground").Use().SetMatrix4("projection", projection);
     this->m_playground = new Playground(ResourceManager::GetShader("playground"), 
                                         ResourceManager::GetTexture("background"),
                                         glm::vec2(0, 0), // 暂时考虑简单门的场地
                                         glm::vec2(this->m_width, this->m_height), 
-                                        0.1f, glm::vec3(0.5f, 0.5f, 0.5f));
+                                        0.1f, glm::vec3(1.0f, 0.8f, 1.0f));
 
     // load ball
     ResourceManager::LoadShader("src/shaders/ball.vs", "src/shaders/ball.fs", nullptr, "ball");
-    ResourceManager::LoadTexture("resources/textures/awesomeface.png", GL_TRUE, "ball");
-    ResourceManager::LoadTexture("resources/textures/awesomeface_selected.png", GL_TRUE, "ball_selected");
+    ResourceManager::LoadTexture("resources/textures/football.png", GL_TRUE, "ball");
+    ResourceManager::LoadTexture("resources/textures/awesomeface.png", GL_TRUE, "player");
+    ResourceManager::LoadTexture("resources/textures/awesomeface_selected.png", GL_TRUE, "player_selected");
     ResourceManager::GetShader("ball").Use().SetMatrix4("projection", projection);
     this->m_ball = new Ball(ResourceManager::GetShader("ball"),
                             ResourceManager::GetTexture("ball"),
                             glm::vec2(this->m_width * 0.5 - BALL_RADIUS, this->m_height * 0.5 - BALL_RADIUS), // position
                             glm::vec2(BALL_RADIUS * 2, BALL_RADIUS * 2), // size
                             glm::vec2(0, 0), // velocity
-                            glm::vec3(0.0f, 1.0f, 0.0f)); // color
+                            glm::vec3(1.0f, 0.5f, 1.0f)); // color
 
     // load player
     for(int i=0; i<PLAYER_MAX_NUM; i++) {
@@ -78,7 +79,7 @@ void Game::Init()
         ResourceManager::LoadShader("src/shaders/player.vs", "src/shaders/player.fs", nullptr, shader_name);
         ResourceManager::GetShader(shader_name).Use().SetMatrix4("projection", projection);
         Player* player = new Player(ResourceManager::GetShader(shader_name),
-                                    ResourceManager::GetTexture("ball"),
+                                    ResourceManager::GetTexture("player"),
                                     BLUE_TIME_INIT_POSITION + BLUE_TEAM_POSITION_OFFSET[i] - PLAYER_SIZE / 2.0f, // according to different player, add diff offset
                                     PLAYER_SIZE, 
                                     glm::vec2(0, 0), 
@@ -91,7 +92,7 @@ void Game::Init()
         ResourceManager::LoadShader("src/shaders/player.vs", "src/shaders/player.fs", nullptr, shader_name);
         ResourceManager::GetShader(shader_name).Use().SetMatrix4("projection", projection);
         Player* player = new Player(ResourceManager::GetShader(shader_name),
-                                    ResourceManager::GetTexture("ball"),
+                                    ResourceManager::GetTexture("player"),
                                     RED_TIME_INIT_POSITION + RED_TEAM_POSITION_OFFSET[i] - PLAYER_SIZE / 2.0f,
                                     PLAYER_SIZE, 
                                     glm::vec2(0, 0), // velocity control by AI
@@ -101,7 +102,7 @@ void Game::Init()
     // set human player
     this->m_player_human_blue = this->m_players_blue[0];
     this->m_player_human_blue->set_role(HUMAN_PLAYER);
-    this->m_player_human_blue->set_texture(ResourceManager::GetTexture("ball_selected"));
+    this->m_player_human_blue->set_texture(ResourceManager::GetTexture("player_selected"));
     this->m_player_human_red = this->m_players_red[0];
     this->m_player_human_red->set_role(HUMAN_PLAYER);
 
@@ -170,6 +171,12 @@ void Game::Render()
     std::string score = std::to_string(this->m_score_blue) + ":" + std::to_string(this->m_score_red);
     this->m_text_render->RenderText(score, this->m_width / 2 - FONT_SIZE, this->m_height - FONT_SIZE, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
     
+    // render game turn
+    if(this->m_state == GAME_ACTIVE) {
+       std::string turn = this->m_turn == BLUE_TURN ? "Blue Turn" : "Red Turn";
+        this->m_text_render->RenderText(turn, this->m_width / 2 - FONT_SIZE / 2 * turn.size() / 2 , this->m_height / 2 - FONT_SIZE, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+    }
+    
     if(this->m_state == GAME_WIN) {
         std::string win = this->m_score_blue > this->m_score_red ? "Blue Win!" : "Red Win!";
         this->m_text_render->RenderText(win, this->m_width / 2 - FONT_SIZE / 2 * win.size() / 2 , this->m_height / 2 + FONT_SIZE, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
@@ -208,13 +215,13 @@ void Game::MouseRelease()
     if(this->m_turn == BLUE_TURN) {
         this->m_player_human_blue->m_velocity = glm::normalize(this->Mouse_position - this->m_player_human_blue->m_position) * strength *  PLAYER_SPEED;
         this->m_turn = RED_TURN;
-        this->m_player_human_blue->set_texture(ResourceManager::GetTexture("ball"));
-        this->m_player_human_red->set_texture(ResourceManager::GetTexture("ball_selected"));
+        this->m_player_human_blue->set_texture(ResourceManager::GetTexture("player"));
+        this->m_player_human_red->set_texture(ResourceManager::GetTexture("player_selected"));
     } else {
         this->m_player_human_red->m_velocity = glm::normalize(this->Mouse_position - this->m_player_human_red->m_position) * strength * PLAYER_SPEED;
         this->m_turn = BLUE_TURN;
-        this->m_player_human_blue->set_texture(ResourceManager::GetTexture("ball_selected"));
-        this->m_player_human_red->set_texture(ResourceManager::GetTexture("ball"));
+        this->m_player_human_blue->set_texture(ResourceManager::GetTexture("player_selected"));
+        this->m_player_human_red->set_texture(ResourceManager::GetTexture("player"));
     }
 }
 
@@ -232,6 +239,15 @@ void Game::Reset()
 
         this->m_players_red[i]->m_position = RED_TIME_INIT_POSITION + RED_TEAM_POSITION_OFFSET[i] - PLAYER_SIZE / 2.0f;
         this->m_players_red[i]->m_velocity = glm::vec2(0.0f, 0.0f);
+    }
+}
+
+void Game::set_player_toward()
+{
+    if(this->m_turn == BLUE_TURN) {
+        this->m_player_human_blue->set_toward(glm::atan(this->Mouse_position.y - this->m_player_human_blue->m_position.y, this->Mouse_position.x - this->m_player_human_blue->m_position.x));
+    } else {
+        this->m_player_human_red->set_toward(glm::atan(this->Mouse_position.y - this->m_player_human_red->m_position.y, this->Mouse_position.x - this->m_player_human_red->m_position.x));
     }
 }
 
