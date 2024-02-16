@@ -18,7 +18,6 @@ enum GameState {
     GAME_WIN
 };
 
-
 class Game {
     public:
         GameState m_state;
@@ -40,7 +39,19 @@ class Game {
         glm::vec2 m_mouse_position; // mouse position
         
         Game(GLfloat width, GLfloat height) : m_width(width), m_height(height), m_score_blue(0), m_score_red(0), m_state(GAME_MENU) {}
-        ~Game(){ delete m_playground; }
+        ~Game(){ 
+            delete m_playground; 
+            delete m_ball;
+            delete m_gate_blue;
+            delete m_gate_red;
+            delete m_text_render;
+            for (auto player : m_players_blue) {
+                delete player;
+            }
+            for (auto player : m_players_red) {
+                delete player;
+            }
+        }
 
         void Init();
 
