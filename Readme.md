@@ -48,3 +48,10 @@
     - 渲染游戏各个对象
         - 根据size，position，color，shader，texture，rotation等渲染对象
 - 游戏结束，清理资源，退出游戏
+
+## video demo
+
+
+https://github.com/szt6b6/2d_football/assets/34064351/d19e4975-ae0c-4983-b19a-c038d47b180b
+
+
